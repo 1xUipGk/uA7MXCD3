@@ -75,64 +75,47 @@ document.getElementById('imageUpload').addEventListener('change', (event) => {
     }
 });
 
-function extractTextFromImage() {
-    const imageUpload = document.getElementById('imageUpload');
-    if (imageUpload.files.length === 0) {
-        alert('يرجى رفع صورة أولاً.');
-        return;
-    }
+// دالة استخراج النص
+function extractTextFromImage(img) {
+    // إنشاء Canvas لتحديد المنطقة
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
 
-    const file = imageUpload.files[0];
-    const reader = new FileReader();
+    // تعيين أبعاد Canvas
+    tempCanvas.width = img.width;
+    tempCanvas.height = img.height;
 
-    reader.onload = function(event) {
-        const img = new Image();
-        img.onload = function() {
-            // إنشاء Canvas لتحديد المنطقة
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
+    // رسم الصورة على Canvas
+    tempCtx.drawImage(img, 0, 0);
 
-            // تعيين أبعاد Canvas
-            tempCanvas.width = img.width;
-            tempCanvas.height = img.height;
+    // تحديد المنطقة المطلوبة (750 - 1000)
+    const imageData = tempCtx.getImageData(0, 750, img.width, 250); // ارتفاع 250 بكسل من 750 إلى 1000
 
-            // رسم الصورة على Canvas
-            tempCtx.drawImage(img, 0, 0);
+    // إنشاء Canvas جديد لاستخراج النص
+    const extractionCanvas = document.createElement('canvas');
+    extractionCanvas.width = img.width;
+    extractionCanvas.height = 250; // ارتفاع المنطقة المطلوبة
+    const extractionCtx = extractionCanvas.getContext('2d');
 
-            // تحديد المنطقة المطلوبة (750 - 1000)
-            const imageData = tempCtx.getImageData(0, 750, img.width, 250); // ارتفاع 250 بكسل من 750 إلى 1000
+    // رسم المنطقة المحددة على Canvas جديد
+    extractionCtx.putImageData(imageData, 0, 0);
 
-            // إنشاء Canvas جديد لاستخراج النص
-            const extractionCanvas = document.createElement('canvas');
-            extractionCanvas.width = img.width;
-            extractionCanvas.height = 250; // ارتفاع المنطقة المطلوبة
-            const extractionCtx = extractionCanvas.getContext('2d');
-
-            // رسم المنطقة المحددة على Canvas جديد
-            extractionCtx.putImageData(imageData, 0, 0);
-
-            // استخدام Tesseract لاستخراج النص من المنطقة المحددة
-            Tesseract.recognize(
-                extractionCanvas.toDataURL(), // تحويل Canvas إلى Data URL
-                'ara', // تحديد اللغة العربية
-                {
-                    logger: info => console.log(info) // سجل التقدم
-                }
-            ).then(({ data: { text } }) => {
-                // عرض النص المستخرج في مربع النص
-                document.getElementById('textBox').value = text;
-                console.log(text); // يمكنك استخدام النص كما تريد
-            }).catch(error => {
-                console.error('Error extracting text:', error);
-                alert('حدث خطأ أثناء استخراج النص. يرجى المحاولة مرة أخرى.');
-            });
-        };
-        img.src = event.target.result; // تعيين مصدر الصورة
-    };
-
-    reader.readAsDataURL(file); // قراءة الصورة كـ Data URL
+    // استخدام Tesseract لاستخراج النص من المنطقة المحددة
+    Tesseract.recognize(
+        extractionCanvas.toDataURL(), // تحويل Canvas إلى Data URL
+        'ara', // تحديد اللغة العربية
+        {
+            logger: info => console.log(info) // سجل التقدم
+        }
+    ).then(({ data: { text } }) => {
+        // عرض النص المستخرج في مربع النص
+        document.getElementById('textBox').value = text;
+        console.log(text); // يمكنك استخدام النص كما تريد
+    }).catch(error => {
+        console.error('Error extracting text:', error);
+        alert('حدث خطأ أثناء استخراج النص. يرجى المحاولة مرة أخرى.');
+    });
 }
-
 
 
 function drawText() {
