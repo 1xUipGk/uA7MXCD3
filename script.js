@@ -59,6 +59,21 @@ function processImage(image) {
         console.error('Error processing image:', error);
     }
 }
+document.getElementById('imageUpload').addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                processImage(img); // إذا كان لديك وظيفة لعرض الصورة
+                extractTextFromImage(img); // استخراج النص مباشرة بعد تحميل الصورة
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
 
 function extractTextFromImage() {
     const imageUpload = document.getElementById('imageUpload');
